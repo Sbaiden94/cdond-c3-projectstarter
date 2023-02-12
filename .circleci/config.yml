@@ -143,9 +143,9 @@ jobs:
            cat .circleci/ansible/inventory.txt
 
       - persist_to_workspace:
-          root: .circleci/ansible/
+          root: ~/
           paths:
-            - inventory.txt
+            - project/.circleci/ansible/inventory.txt
       - destory_environment
 
   configure-infrastructure:
@@ -157,7 +157,7 @@ jobs:
       - add_ssh_keys:
           fingerprints: ["7a:13:40:7a:84:05:21:f0:35:ed:ec:ac:7b:b3:51:4d"]
       - attach_workspace:
-          at: ~/ansible
+          at: ~/
       # Checkout code from git
       # Add ssh keys with fingerprint
       # attach workspace
