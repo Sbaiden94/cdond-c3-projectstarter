@@ -162,13 +162,6 @@ jobs:
       # Add ssh keys with fingerprint
       # attach workspace
       - run:
-          name: Install dependencies
-          command: |
-            yum install tar gzip -y
-            yum install ansible -y
-            # Your code here
-            exit 1
-      - run:
           name: Configure server
           command: |
             cd .circle/ansible
