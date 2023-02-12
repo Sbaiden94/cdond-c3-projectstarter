@@ -143,8 +143,39 @@ jobs:
             aws ec2 describe-instances --profile default 
               --query 'Reservations[*].Instances[*].PublicIpAddress' 
               --filters "Name=tag:Name,Values=backend-${ID}" 
-              --output text >> inventory
+              --output text >> ~/ansible/inventory.txt
+      - persist_to_workspace:
+          root: ~/ansible
+          paths:
+            - "inventory"
       - destory_environment
+
+  configure-infrastructure:
+    docker:
+      - image: python:3.7-alpine3.11
+      # Docker image here that supports Ansible
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["7a:13:40:7a:84:05:21:f0:35:ed:ec:ac:7b:b3:51:4d"]
+      - attach_workspace:
+          at: ~/ansible
+      # Checkout code from git
+      # Add ssh keys with fingerprint
+      # attach workspace
+      - run:
+          name: Install dependencies
+          command: |
+            yum install tar gzip -y
+            yum install ansible -y
+            # Your code here
+            exit 1
+      - run:
+          name: Configure server
+          command: |
+            # Your code here
+            exit 1
+      # Here's where you will add some code to rollback on failure
 
             
 
@@ -161,5 +192,6 @@ workflows:
           requires: [build-frontend]
       - scan-backend:
           requires: [build-backend]
-      - deploy-infrastructure
+      - deploy-infrastructure:
+          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
       
