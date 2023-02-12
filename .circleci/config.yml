@@ -136,9 +136,9 @@ jobs:
       - run: 
           name: Adding EC2 instance IP to Ansible Inventory for backend
           command: |
-            aws ec2 describe-instances \
-              --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --filters "Name=tag:Name,Values=backend-${ID}" \
+            aws ec2 describe-instances 
+              --query 'Reservations[*].Instances[*].PublicIpAddress' 
+              --filters "Name=tag:Name,Values=backend-${ID}"
               --output text >> .circleci/ansible/inventory.txt
               cat .circleci/ansible/inventory.txt
 
