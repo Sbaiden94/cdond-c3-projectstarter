@@ -102,6 +102,8 @@ jobs:
             cd frontend
             npm install
             npm audit fix --audit-level=critical --force
+            npm run migrations > migrations_dump.txt
+            cat migrations_dump.txt
 
   scan-backend:
     docker:
