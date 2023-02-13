@@ -187,18 +187,7 @@ jobs:
       # Here's where you will add some code to rollback on failure
   run-migrations:
     docker:
-      - image: sleavely/node-awscli:12.x
-        environment:
-          NODE_ENV: "local"
-          VERSION: "1"
-          ENVIRONMENT: "production"
-          TYPEORM_CONNECTION: $TYPEORM_CONNECTION
-          TYPEORM_HOST: $TYPEORM_HOST
-          TYPEORM_USERNAME: $TYPEORM_USERNAME
-          TYPEORM_PASSWORD: $TYPEORM_PASSWORD
-          TYPEORM_DATABASE: $TYPEORM_DATABASE
-          TYPEORM_PORT: $TYPEORM_PORT
-          TYPEORM_ENTITIES: $TYPEORM_ENTITIES
+      - image: circleci/node:13.8.0
     steps:
       - checkout
       - install_awscli
@@ -208,13 +197,7 @@ jobs:
           name: Installing NPM
           command: |
             cd backend 
-            npm install 
-            npm audit fix --audit-level=critical --force
-      - run:
-          name: running npm migrations
-          command: |
-            cd backend
-            npm run migrations > migrations_dump.txt
+            npm run migrations >> migrations_dump.txt
             cat migrations_dump.txt
       - run: 
           name: Send migration status to a 3rd party key-value store
