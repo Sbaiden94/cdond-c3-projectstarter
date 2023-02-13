@@ -26,7 +26,22 @@ commands:
             curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
             unzip awscliv2.zip
             sudo ./aws/install
-
+  revert-migrations:
+    description: Revert the last migration if successfully run in the current workflow.
+    steps:
+      - run: 
+          name: Revert migrations
+          working_directory: ./backend
+          when: on_fail
+          command: |
+            SUCCESS=$(curl --insecure https://kvdb.io/${KVDB_KEY}/migration_${CIRCLE_WORKFLOW_ID:0:7})
+            echo $SUCCESS
+            if [[ "$SUCCESS" == "success" ]]
+            then
+              pwd
+              ls -la
+              npm run migrations:revert
+            fi
 jobs:
   build-frontend:
     docker:
@@ -211,6 +226,7 @@ jobs:
                echo "No Migrations"
             fi
       - destory_environment
+      - revert-migrations
 
   deploy_frontend:
     docker:
@@ -234,6 +250,13 @@ jobs:
             echo "API_URL = ${API_URL}"
             echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
             cat frontend/.env
+      - run:
+          name: Deploy Frontend objects
+          command: |
+            cd frontend
+            npm run build
+            tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
+            aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
       - destory_environment
 workflows:
   default:
@@ -254,6 +277,6 @@ workflows:
           requires: [deploy-infrastructure]
       - run-migrations:
           requires: [configure-infrastructure]
-      #- deploy-frontend:
-          #requires: [run-migrations]
+      - deploy-frontend:
+          requires: [run-migrations]
       
