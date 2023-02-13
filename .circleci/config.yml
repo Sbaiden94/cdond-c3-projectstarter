@@ -17,7 +17,7 @@ commands:
             aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7} 
             aws cloudformation delete-stack --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}
 
-install_awscli:
+  install_awscli:
     description: Install AWS CLI v2
     steps:
       - run:
