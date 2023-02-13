@@ -176,7 +176,7 @@ jobs:
       # Here's where you will add some code to rollback on failure
   run-migrations:
     docker:
-      - image: circleci/node:13.8.0
+      - image: sleavely/node-awscli:12.x
     steps:
       - checkout
       - restore_cache:
@@ -200,7 +200,7 @@ jobs:
                echo "No Migrations"
             fi
       - destory_environment
-      
+
   deploy_frontend:
     docker:
       - image: circleci/node:13.8.0
