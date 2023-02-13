@@ -196,7 +196,7 @@ jobs:
       - run:
           name: Run migrations
           command: |
-            cd backend \
+            cd backend 
             npm install \
             npm audit fix --audit-level=critical --force
       - destory_environment
