@@ -211,7 +211,8 @@ jobs:
             cd .circleci/ansible
             ansible-playbook -i inventory.txt configure-server.yml
       # Here's where you will add some code to rollback on failure
-    
+      - destroy_environment:
+          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
   run-migrations:
     docker:
       - image: circleci/node:13.8.0
@@ -237,8 +238,10 @@ jobs:
                else
                echo "No Migrations"
             fi
-      - destroy_environment
-      - revert-migrations
+      - destroy_environment:
+          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
+      - revert-migrations:
+          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
   deploy-frontend:
     docker:
       - image: circleci/node:13.8.0
@@ -266,8 +269,10 @@ jobs:
             npm run build
             tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
-      - destroy_environment
-      - revert-migrations
+      - destroy_environment:
+          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
+      - revert-migrations:
+          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
       
 
   deploy-backend:
@@ -311,8 +316,10 @@ jobs:
             echo "Contents of the inventory.txt file is -------"
             cat inventory.txt
             ansible-playbook -i inventory.txt deploy-backend.yml
-      - destroy_environment
-      - revert-migrations
+      - destroy_environment:
+          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
+      - revert-migrations:
+          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
   
   smoke-test:
     docker:
@@ -354,6 +361,10 @@ jobs:
             else
               return 1
             fi
+      - destroy_environment:
+          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
+      - revert-migrations:
+          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
       
     
 workflows:
