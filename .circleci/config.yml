@@ -329,6 +329,17 @@ jobs:
   smoke-test:
     docker:
       - image: python:3.7-alpine3.11
+        environment:
+          NODE_ENV: "local"
+          VERSION: "1"
+          ENVIRONMENT: "production"
+          TYPEORM_CONNECTION: $TYPEORM_CONNECTION
+          TYPEORM_HOST: $TYPEORM_HOST
+          TYPEORM_USERNAME: $TYPEORM_USERNAME
+          TYPEORM_PASSWORD: $TYPEORM_PASSWORD
+          TYPEORM_DATABASE: $TYPEORM_DATABASE
+          TYPEORM_PORT: $TYPEORM_PORT
+          TYPEORM_ENTITIES: $TYPEORM_ENTITIES
     steps:
       - checkout
       - attach_workspace:
@@ -344,7 +355,7 @@ jobs:
           name: Backend smoke test
           command: |
             export BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" --output text)
-            export API_URL="https://${BACKEND_IP}:3030"
+            export API_URL="http://${BACKEND_IP}:3030"
             echo "API_URL = ${API_URL}"
             if curl "${API_URL}/api/status" | grep "okay"
             then
@@ -381,7 +392,7 @@ jobs:
           name: get Old Workflow
           command: |
             # your code here
-            export OLD_WORKFLOW_ID = $(aws cloudformation list-exports --query "Exports[?Name==\`WorkflowID\`].Value" --no-paginate --output text)
+            export OLD_WORKFLOW_ID=$(aws cloudformation list-exports --query "Exports[?Name==\`WorkflowID\`].Value" --no-paginate --output text)
                     echo "Old Wokflow ID : $OLD_WORKFLOW_ID"
                     curl https://kvdb.io/${KVDB_KEY}/old_workflow_id -d "${OLD_WORKFLOW_ID}"
       - run:
@@ -411,7 +422,7 @@ jobs:
               --query "StackSummaries[*].StackName" \
               --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
               echo Stack names: "${STACKS[@]}"
-              export OLD_WORKFLOW_ID = $(curl --insecure https://kvdb.io/${KVDB_KEY}/old_workflow_id)
+              export OLD_WORKFLOW_ID=$(curl --insecure https://kvdb.io/${KVDB_KEY}/old_workflow_id)
               echo "Old Workflow ID: $OLD_WORKFLOW_ID"
               if [[ "${CIRCLE_WORKFLOW_ID:0:7}" != "${OLD_WORKFLOW_ID}" ]]
               then
