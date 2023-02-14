@@ -37,13 +37,17 @@ commands:
             sudo ./aws/install
   revert-migrations:
     description: Revert the last migration if successfully run in the current workflow.
+    parameters:
+      workflowID:
+        type: string
+        default: ${CIRCLE_WORKFLOW_ID:0:7}
     steps:
       - run: 
           name: Revert migrations
           working_directory: ./backend
           when: on_fail
           command: |
-            SUCCESS=$(curl --insecure https://kvdb.io/${KVDB_KEY}/migration_${CIRCLE_WORKFLOW_ID:0:7})
+            SUCCESS=$(curl --insecure https://kvdb.io/${KVDB_KEY}/migration_<< parameters.workflowID >>)
             echo $SUCCESS
             if [[ "$SUCCESS" == "success" ]]
             then
