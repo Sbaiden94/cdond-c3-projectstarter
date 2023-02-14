@@ -388,7 +388,7 @@ jobs:
           name: Update Cloudformation distribution
           command: |
             aws cloudformation deploy --template-file .circleci/files/cloudfront.yml --stack-name InitialStack --parameter-overrides WorkflowID="udapeople-${CIRCLE_WORKFLOW_ID:0:7}" --tags project=udapeople
-            
+            echo "Current Workflow Id: ${CIRCLE_WORKFLOW_ID:0:7}"
       #- run:
           #name: Update cloudfront distribution
           #command: |
@@ -398,7 +398,30 @@ jobs:
           workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
       - revert-migrations:
           workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
-      
+  
+  cleanup:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - run:
+          name: Query CloudFormation to Find Old Stack's workflow id
+          command: |
+            export STACKS=($(aws cloudformation list-stacks \
+                    --query "StackSummaries[*].StackName" \
+                    --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
+                    echo Stack names: "${STACKS[@]}"
+                    export OLD_WORKFLOW_ID=$(curl --insecure https://kvdb.io/${KVDB_KEY}/old_workflow_id)
+                    echo Old Workflow ID: $OLD_WORKFLOW_ID
+                    if [[ "${CIRCLE_WORKFLOW_ID:0:7}" != "${OLD_WORKFLOW_ID}" ]]
+                    then
+                    aws s3 rm s3://udapeople-${OLD_WORKFLOW_ID} --recursive
+                    aws cloudformation delete-stack --stack-name udapeople-backend-${OLD_WORKFLOW_ID}
+                    aws cloudformation delete-stack --stack-name udapeople-frontend-${OLD_WORKFLOW_ID}
+                    else
+                    echo No clean up
+                    fi
+            
+        
     
 workflows:
   default:
@@ -430,6 +453,6 @@ workflows:
           requires: [deploy-backend, deploy-frontend]
       - cloudfront-update:
           requires: [smoke-test]
-      #- cleanup:
-          #requires: [cloudfront-update]
+      - cleanup:
+          requires: [cloudfront-update]
       
