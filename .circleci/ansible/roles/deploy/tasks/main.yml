@@ -32,11 +32,13 @@
     state: latest
     
 - name: "Creates backend app directory"
+  become: true
   file:
     path: ~/backend-app
     state: directory
     
 - name: "Unarchive backend files"
+  become: true
   unarchive:
     src: artifact.tar.gz
     dest: ~/backend-app
