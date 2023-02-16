@@ -282,32 +282,45 @@ jobs:
 
   deploy-backend:
     docker:
+      - image: python:3.7-alpine3.11
       # Docker image here that supports Ansible
-      - image: python:3.10-alpine3.16
     steps:
       - checkout
       - add_ssh_keys:
-              fingerprints: ["81:ab:74:62:1f:4f:b2:a7:aa:83:bd:71:e0:39:9f:c5"]
-      # Attach workspace
+          fingerprints: ["7a:13:40:7a:84:05:21:f0:35:ed:ec:ac:7b:b3:51:4d"]
       - attach_workspace:
           at: ~/
+      # Checkout code from git
+      # Add ssh keys with fingerprint
+      # attach workspace
       - run:
-          name: Install dependencies
+          name: Installing Dependencies
           command: |
-            apk add --update --no-cache ansible tar gzip nodejs npm curl aws-cli
+            apk add --update ansible
+            apk add --update tar
+            apk add --update gzip
+            apk add --update nodejs
+            apk add --update npm
+            pip3 install awscli
       - run:
           name: Deploy backend
           command: |
+            pwd
+            ls -al
             cd backend
             npm install
             npm run build
             cd ..
+            pwd
+            ls -al
             # Zip the directory
-            tar -C backend -czvf artifact.tar.gz .
+            tar -czvf artifact.tar.gz -C backend/ .
+            mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
+            mv artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
             cd .circleci/ansible
-            echo "Contents  of the ~/project/.circleci/ansible/inventory.txt file is -------"
+            echo "Contents of the inventory.txt file is ------"
             cat inventory.txt
-            ansible-playbook -i ~/project/.circleci/ansible/inventory.txt deploy-backend.yml
+            ansible-playbook -i inventory.txt deploy-backend.yml
       #- destroy_environment:
           #workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
       #- revert-migrations:
@@ -315,51 +328,54 @@ jobs:
   
   smoke-test:
     docker:
-      # Lightweight Docker image
-      - image: python:3.7-alpine3.16
+      - image: python:3.7-alpine3.11
+        environment:
+          VERSION: "1"
+          ENVIRONMENT: "production"
+          TYPEORM_CONNECTION: $TYPEORM_CONNECTION
+          TYPEORM_HOST: $TYPEORM_HOST
+          TYPEORM_USERNAME: $TYPEORM_USERNAME
+          TYPEORM_PASSWORD: $TYPEORM_PASSWORD
+          TYPEORM_DATABASE: $TYPEORM_DATABASE
+          TYPEORM_PORT: $TYPEORM_PORT
+          TYPEORM_ENTITIES: $TYPEORM_ENTITIES
     steps:
-      # Checkout code from git
       - checkout
+      - attach_workspace:
+          at: ~/
       - run:
-          name: Install dependencies
+          name: Installing Dependencies
           command: |
-            # your code here
-            apk add --update --no-cache curl aws-cli nodejs npm
+            apk add --update curl
+            apk add --update nodejs
+            apk add --update npm
+            pip3 install awscli
       - run:
-          name: Get backend url
+          name: Backend smoke test
           command: |
-            # your code here
-            export BACKEND_IP=$(aws ec2 describe-instances \
-            --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-            --query "Reservations[*].Instances[*].PublicDnsName" \
-            --output text)
-            echo ${BACKEND_IP}
-            export BACKEND=$(echo $BACKEND_IP | grep -o '[^ ]*$')
-            
-            echo $BACKEND
-            export API_URL="http://${BACKEND}:3030"
-            echo "API_URL=${API_URL}"           
+            export BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" --output text)
+            export API_URL="http://${BACKEND_IP}:3030"
+            echo "API_URL = ${API_URL}"
+            sleep 60
+            if curl "${API_URL}/api/status" | grep "okay"
+            then
+              echo "Success test"
+              return 0
+            else
+              echo "test failed"
+              return 1
+            fi
       - run:
-          name: Backend smoke test.
+          name: Frontend smoke test
           command: |
-            # your code here
-            if [[ 'ok' =~ $(curl -s --connect-timeout 5 http://${BACKEND_IP}:3030/api/status | grep -o ok) ]];then return 0 else return 1;fi
-            # if curl "${API_URL}/api/status" | grep "ok"
-            # then
-            #     return 0
-            # else
-            #     return 1
-            # fi
-      - run:
-          name: Frontend smoke test.
-          command: |
-            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-east-1.amazonaws.com/#/employees"            
+            export URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-east-1.amazonaws.com/#employees"
             echo ${URL}
             if curl -s ${URL} | grep "Welcome"
             then
-              echo "success" && return 0
+            #Change this to 0 after the job fails
+              return 0
             else
-              echo "failed" && return 1
+              return 1
             fi
       #- destroy_environment:
           #workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
