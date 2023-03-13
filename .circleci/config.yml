@@ -388,21 +388,18 @@ jobs:
       # Checkout code from git
       - checkout
       - run:
-          name: Save Old Workflow ID to kvdb.io
+          name: get Old Workflow
           command: |
-              export OLD_WORKFLOW_ID=$(aws cloudformation \
-              list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
-              --no-paginate --output text)
-              echo "Old Wokflow ID: $OLD_WORKFLOW_ID"
-              curl https://kvdb.io/${KVDB_BUCKET}/old_workflow_id -d "${OLD_WORKFLOW_ID}"
+            # your code here
+            export OLD_WORKFLOW_ID=$(aws cloudformation list-exports --query "Exports[?Name==\`WorkflowID\`].Value" --no-paginate --output text)
+                    echo "Old Wokflow ID : $OLD_WORKFLOW_ID"
+                    curl https://kvdb.io/${KVDB_KEY}/old_workflow_id -d "${OLD_WORKFLOW_ID}"
       - run:
-            name: Update cloudfront distribution
-            command: |
-                aws cloudformation deploy \
-                --template-file cloudfront.yml \
-                --stack-name udapeople-initial \
-                --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}"
-      # Here's where you will add some code to rollback on failure
+          name: Update Cloudformation distribution
+          command: |
+            aws cloudformation deploy --template-file .circleci/files/cloudfront.yml --stack-name udapeople-initial --parameter-overrides WorkflowID="udapeople-${CIRCLE_WORKFLOW_ID:0:7}" --tags project=udapeople
+            echo "Current Workflow Id: ${CIRCLE_WORKFLOW_ID:0:7}"
+      
       - destroy_environment:
           workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
       - revert-migrations:
