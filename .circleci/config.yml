@@ -322,10 +322,10 @@ jobs:
             echo "Contents of the inventory.txt file is ------"
             cat inventory.txt
             ansible-playbook -i inventory.txt deploy-backend.yml
-      #- destroy_environment:
-          #workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
-      #- revert-migrations:
-          #workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
+      - destroy_environment:
+          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
+      - revert-migrations:
+          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
   
   smoke-test:
     docker:
@@ -378,10 +378,10 @@ jobs:
             else
               return 1
             fi
-      #- destroy_environment:
-          #workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
-      #- revert-migrations:
-          #workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
+      - destroy_environment:
+          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
+      - revert-migrations:
+          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
   
   cloudfront-update:
     docker:
@@ -400,17 +400,17 @@ jobs:
       - run:
           name: Update Cloudformation distribution
           command: |
-            aws cloudformation deploy --template-file .circleci/files/cloudfront.yml --stack-name InitialStack --parameter-overrides WorkflowID="udapeople-${CIRCLE_WORKFLOW_ID:0:7}" --tags project=udapeople
+            aws cloudformation deploy --template-file .circleci/files/cloudfront.yml --stack-name udapeople-cloudfront --parameter-overrides WorkflowID="udapeople-${CIRCLE_WORKFLOW_ID:0:7}" --tags project=udapeople
             echo "Current Workflow Id: ${CIRCLE_WORKFLOW_ID:0:7}"
       #- run:
           #name: Update cloudfront distribution
           #command: |
             # your code here
       # Here's where you will add some code to rollback on failure
-      #- destroy_environment:
-          #workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
-      #- revert-migrations:
-          #workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
+      - destroy_environment:
+          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
+      - revert-migrations:
+          workflowID: ${CIRCLE_WORKFLOW_ID:0:7}
   
   cleanup:
     docker:
