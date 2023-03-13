@@ -32,8 +32,9 @@
 - name: "Copy artifact into Instance" 
   become: true
   copy:
-    src: ~/project/artifact.tar.gz
+    src: ./files/artifact.tar.gz
     dest: /home/ubuntu/artifact.tar.gz
+   
 
 
 - name: "Start app"
