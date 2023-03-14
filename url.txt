@@ -1,2 +1,2 @@
 Github public repo [URL01]: https://github.com/Sbaiden94/cdond-c3-projectstarter
-S3 [URL02]: http://udapeople-1c871c5.s3-website-us-east-1.amazonaws.com/#/employees
+S3 [URL02]: http://udapeople-93c8b58.s3-website-us-east-1.amazonaws.com/#/employees
